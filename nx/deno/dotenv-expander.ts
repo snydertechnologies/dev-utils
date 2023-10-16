@@ -150,7 +150,7 @@ async function ensureDotenvLinterInstalled(): Promise<boolean> {
   log("Attempting install using cargo...");
   if (await isCargoAvailable()) {
     log("Installing dotenv-linter using cargo...");
-    const success = await runCommandSafe(["cargo", "install", "dotenv-linter", "--force"]);
+    const success = await runCommandSafe(["sh", "-c", "cargo install dotenv-linter --force"]);
 
     if (!success || !await isDotenvLinterInPath()) {
       throw new Error("Failed to install dotenv-linter using cargo. Falling back to another method.");
