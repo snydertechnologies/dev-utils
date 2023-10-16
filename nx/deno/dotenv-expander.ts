@@ -144,6 +144,7 @@ async function ensureDotenvLinterInstalled(): Promise<boolean> {
   if (await isDotenvLinterBinaryInWorkspace()) {
     log(chalk.green("dotenv-linter is installed at ./bin/dotenv-linter ... will fallback to that!"));
     fallbackToWorkspaceBin = true;
+    return true; // dotenv-linter is already installed in the workspace
   }
 
   // Attempt to install dotenv-linter using Cargo (Rust's package manager).
