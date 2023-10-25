@@ -31,8 +31,12 @@ import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
 import { parse } from "https://deno.land/std@0.204.0/flags/mod.ts";
 import { existsSync } from "https://deno.land/std@0.204.0/fs/mod.ts";
 import diff from "https://deno.land/x/microdiff@v1.3.2/index.ts";
-import chalk from 'npm:chalk';
-import {expand, DotenvExpandOptions, DotenvExpandOutput} from 'npm:dotenv-expand';
+import chalk from "npm:chalk";
+import {
+  expand,
+  DotenvExpandOptions,
+  DotenvExpandOutput,
+} from "npm:dotenv-expand";
 
 /**
  * Parses command-line arguments.
@@ -68,7 +72,11 @@ const showLogs =
 const outputFilePath = args["output-file"] || ".env";
 
 const currentWorkingDirectory = Deno.cwd();
-const dotenvLinterWorkspaceBinary = join(currentWorkingDirectory, "bin", "dotenv-linter");
+const dotenvLinterWorkspaceBinary = join(
+  currentWorkingDirectory,
+  "bin",
+  "dotenv-linter",
+);
 
 interface IKeyValue {
   [key: string]: string;
@@ -117,7 +125,8 @@ async function runCommandSafe(cmd: string[]): Promise<boolean> {
     process.close();
     return status.success;
   } catch (error) {
-    if (showLogs) console.error(`Error running command: ${cmd.join(' ')}`, error);
+    if (showLogs)
+      console.error(`Error running command: ${cmd.join(" ")}`, error);
     return false;
   }
 }
@@ -142,7 +151,11 @@ async function ensureDotenvLinterInstalled(): Promise<boolean> {
 
   // Check if dotenv-linter is already installed within the project's bin directory.
   if (await isDotenvLinterBinaryInWorkspace()) {
-    log(chalk.green("dotenv-linter is installed at ./bin/dotenv-linter ... will fallback to that!"));
+    log(
+      chalk.green(
+        "dotenv-linter is installed at ./bin/dotenv-linter ... will fallback to that!",
+      ),
+    );
     fallbackToWorkspaceBin = true;
     return true; // dotenv-linter is already installed in the workspace
   }
@@ -151,10 +164,16 @@ async function ensureDotenvLinterInstalled(): Promise<boolean> {
   log("Attempting install using cargo...");
   if (await isCargoAvailable()) {
     log("Installing dotenv-linter using cargo...");
-    const success = await runCommandSafe(["sh", "-c", "cargo install dotenv-linter --force"]);
+    const success = await runCommandSafe([
+      "sh",
+      "-c",
+      "cargo install dotenv-linter --force",
+    ]);
 
-    if (!success || !await isDotenvLinterInPath()) {
-      throw new Error("Failed to install dotenv-linter using cargo. Falling back to another method.");
+    if (!success || !(await isDotenvLinterInPath())) {
+      throw new Error(
+        "Failed to install dotenv-linter using cargo. Falling back to another method.",
+      );
     } else {
       log(chalk.green("dotenv-linter installed successfully using cargo!"));
       return true;
@@ -162,12 +181,16 @@ async function ensureDotenvLinterInstalled(): Promise<boolean> {
   }
 
   // If dotenv-linter is not found in PATH yet, attempt to install using a curl command.
-  log("Attempting install using curl...")
-  if (!await isDotenvLinterBinaryInWorkspace()) {
+  log("Attempting install using curl...");
+  if (!(await isDotenvLinterBinaryInWorkspace())) {
     log("dotenv-linter not found, installing using curl...");
-    await runCommandSafe(["sh", "-c", "wget -q -O - https://git.io/JLbXn | sh -s -- -b ./bin/"]);
-      // Verify if dotenv-linter was successfully installed by the curl command.
-    if (!await isDotenvLinterBinaryInWorkspace()) {
+    await runCommandSafe([
+      "sh",
+      "-c",
+      "wget -q -O - https://git.io/JLbXn | sh -s -- -b ./bin/",
+    ]);
+    // Verify if dotenv-linter was successfully installed by the curl command.
+    if (!(await isDotenvLinterBinaryInWorkspace())) {
       throw new Error("Failed to install dotenv-linter using curl.");
     }
     fallbackToWorkspaceBin = true;
@@ -216,21 +239,31 @@ async function isDotenvLinterBinaryInWorkspace(): Promise<boolean> {
 async function lintDotenv(): Promise<void> {
   if (showLogs) {
     console.log(
-      chalk.green(
-        `Running lint with fix on ${outputFilePath} file.`
-      )
+      chalk.green(`Running lint with fix on ${outputFilePath} file.`),
     );
   }
 
   // Ensure that the command is properly formatted to use the local binary path for dotenv-linter
   let success;
-  log(`Running command: ....`)
+  log(`Running command: ....`);
   if (await isDotenvLinterBinaryInWorkspace()) {
-    log(`Using local binary ${dotenvLinterWorkspaceBinary} to fix ${currentWorkingDirectory}/${outputFilePath}`)
-    success = await runCommandSafe(["sh", "-c", "./bin/dotenv-linter fix ${outputFilePath} > /dev/null 2>&1"])
+    log(
+      `Using local binary ${dotenvLinterWorkspaceBinary} to fix ${currentWorkingDirectory}/${outputFilePath}`,
+    );
+    success = await runCommandSafe([
+      "sh",
+      "-c",
+      "./bin/dotenv-linter fix ${outputFilePath} > /dev/null 2>&1",
+    ]);
   } else {
-    log(`Using global binary dotenv-linter to fix ${currentWorkingDirectory}/${outputFilePath}`)
-    success = await runCommandSafe(["sh", "-c", "cd ${currentWorkingDirectory} && dotenv-linter fix ${outputFilePath} > /dev/null 2>&1"])
+    log(
+      `Using global binary dotenv-linter to fix ${currentWorkingDirectory}/${outputFilePath}`,
+    );
+    success = await runCommandSafe([
+      "sh",
+      "-c",
+      "cd ${currentWorkingDirectory} && dotenv-linter fix ${outputFilePath} > /dev/null 2>&1",
+    ]);
   }
 
   // Log the result of the linting process
@@ -306,7 +339,6 @@ export function parseAndFilterFileContent(rawFileContent: string): IKeyValue {
   return currentConfig;
 }
 
-
 /**
  * Expands environment variables within a configuration object based on a provided base configuration.
  * Iterates through each property in the current configuration, expanding variables using values from both the current and base configurations.
@@ -369,11 +401,11 @@ function extractVariableInfo(envValue: string): VariableInfo[] {
   const regex = /(?<!\\)\${?([\w]+)(?::-([^}\\]*))?}?/g;
   const variables: VariableInfo[] = [];
   let match;
-  while (match = regex.exec(envValue)) {
+  while ((match = regex.exec(envValue))) {
     variables.push({
       fullMatch: match[0],
       name: match[1],
-      defaultValue: match[2] || ''
+      defaultValue: match[2] || "",
     });
   }
   return variables;
@@ -388,7 +420,7 @@ function extractVariableInfo(envValue: string): VariableInfo[] {
  * @returns {string[]} - An array of distinct variable names identified within the string.
  */
 export function identifyVariables(envValue: string): string[] {
-  return extractVariableInfo(envValue).map(info => info.name);
+  return extractVariableInfo(envValue).map((info) => info.name);
 }
 
 /**
@@ -403,7 +435,7 @@ export function identifyVariables(envValue: string): string[] {
  */
 export function interpolate(envValue: string, config: IKeyValue): string {
   let result = envValue;
-  extractVariableInfo(envValue).forEach(info => {
+  extractVariableInfo(envValue).forEach((info) => {
     const replacementValue = config[info.name] || info.defaultValue;
     result = result.replace(info.fullMatch, replacementValue);
   });
@@ -428,21 +460,24 @@ function topoSort(config: IKeyValue): IKeyValue {
   const result: string[] = [];
 
   // Build the graph
-  Object.keys(config).forEach(key => {
-    graph.set(key, extractVariableInfo(config[key]).map(info => info.name));
+  Object.keys(config).forEach((key) => {
+    graph.set(
+      key,
+      extractVariableInfo(config[key]).map((info) => info.name),
+    );
   });
 
   function visit(node: string, ancestors: Set<string> = new Set()): void {
     if (!graph.has(node)) return;
 
     if (ancestors.has(node)) {
-      throw new Error('Cyclic dependency detected');
+      throw new Error("Cyclic dependency detected");
     }
 
     ancestors.add(node);
     const children = graph.get(node);
-    graph.delete(node);  // Mark as visited
-    children?.forEach(child => visit(child, ancestors));
+    graph.delete(node); // Mark as visited
+    children?.forEach((child) => visit(child, ancestors));
     ancestors.delete(node);
 
     result.push(node);
@@ -473,8 +508,8 @@ export function sortByDependencyTree(config: IKeyValue): IKeyValue {
   try {
     return topoSort(config);
   } catch (e) {
-    console.error('Error sorting config:', e.message);
-    return config;  // Return original config if sort fails
+    console.error("Error sorting config:", e.message);
+    return config; // Return original config if sort fails
   }
 }
 
@@ -487,10 +522,7 @@ export function sortByDependencyTree(config: IKeyValue): IKeyValue {
  *
  * @returns {string} - The string with all variables expanded and escape sequences resolved.
  */
-export function expandValue(
-  value: string,
-  config: IKeyValue,
-): string {
+export function expandValue(value: string, config: IKeyValue): string {
   return resolveEscapeSequences(interpolate(value, config));
 }
 
@@ -549,7 +581,7 @@ export function logSeparator() {
  */
 export function processConfigFile(
   rawFileContent: string,
-  baseConfig: IKeyValue = {}
+  baseConfig: IKeyValue = {},
 ): IKeyValue {
   let parsedConfig = parseAndFilterFileContent(rawFileContent);
 
@@ -565,14 +597,15 @@ export function processConfigFile(
   // currentConfig = expandEnvVariablesInConfig(currentConfig, { ...baseConfig, ...currentConfig });
 
   // Use dotenv-expand to handle variable expansions
-  const mergedForExpand: DotenvExpandOptions = { parsed: { ...baseConfig, ...currentConfig } };
+  const mergedForExpand: DotenvExpandOptions = {
+    parsed: { ...baseConfig, ...currentConfig },
+  };
   const expandedConfig: DotenvExpandOutput = expand(mergedForExpand);
 
   currentConfig = expandedConfig.parsed || {};
 
   // log the difference between previousConfig and currentConfig
   console.log(diff(previousConfig, currentConfig));
-
 
   // resolve escape sequences after all variables are expanded and resolved to ensure accurate representation of escape sequences within interpolated strings (e.g., \$)
   for (const key in currentConfig) {
@@ -605,7 +638,9 @@ export async function mergeAndExpandConfigs(
 
   for (const envPath of envPaths) {
     const rawFileContent = await readAndValidateEnvFile(envPath);
-    const currentConfig = await processConfigFile(rawFileContent, { ...config });
+    const currentConfig = await processConfigFile(rawFileContent, {
+      ...config,
+    });
     config = {
       ...config,
       ...currentConfig,
@@ -632,10 +667,7 @@ export function checkFileExistence(path: string): void {
  * @param {string} content - The content to write.
  * @returns {Promise<void>} - A promise indicating the completion of the write operation.
  */
-export function writeFile(
-  filePath: string,
-  content: string,
-): void {
+export function writeFile(filePath: string, content: string): void {
   try {
     Deno.writeTextFile(filePath, content);
     log(`Expanded environment variables written to: ${filePath}`);
@@ -688,11 +720,11 @@ async function deleteFiles(filesToBeDeleted: string[]): Promise<void> {
   if (showLogs) console.log(`Deleting ${filesToBeDeleted}`);
 
   // Use a Promise.all to initiate all deletions concurrently, which can be more efficient than awaiting each deletion in sequence
-  await Promise.all(filesToBeDeleted.map(file => removeFile(file)));
+  await Promise.all(filesToBeDeleted.map((file) => removeFile(file)));
 
-  if (showLogs) console.log(`Deleted ${filesToBeDeleted.length} matching files.`);
+  if (showLogs)
+    console.log(`Deleted ${filesToBeDeleted.length} matching files.`);
 }
-
 
 /**
  * Retrieves the paths of backup files generated by dotenv-linter in a specified directory.
@@ -700,7 +732,9 @@ async function deleteFiles(filesToBeDeleted: string[]): Promise<void> {
  * @param directoryPath - The path to the directory to search for backup files. Defaults to the directory of the output file.
  * @returns A promise that resolves to an array of file paths.
  */
-async function getEnvBakFiles(directoryPath: string = outputFilePath): Promise<string[]> {
+async function getEnvBakFiles(
+  directoryPath: string = outputFilePath,
+): Promise<string[]> {
   try {
     const dirEntries: Deno.DirEntry[] = [];
     for await (const dirEntry of Deno.readDir(directoryPath)) {
@@ -708,17 +742,22 @@ async function getEnvBakFiles(directoryPath: string = outputFilePath): Promise<s
     }
 
     // Convert DirEntry objects to file names
-    const fileNames = dirEntries.filter(entry => entry.isFile).map(entry => entry.name);
+    const fileNames = dirEntries
+      .filter((entry) => entry.isFile)
+      .map((entry) => entry.name);
 
     // Filter files that match the pattern ".env_*.bak"
-    const filteredFileNames = fileNames.filter((fn) => fn.match(/^\.env_.*\.bak$/));
+    const filteredFileNames = fileNames.filter((fn) =>
+      fn.match(/^\.env_.*\.bak$/),
+    );
 
     // Map file names to full file paths
     const filePaths = filteredFileNames.map((fn) => join(directoryPath, fn));
 
     return filePaths;
   } catch (err) {
-    if (showLogs) console.error(`Error while getting backup files: ${err.message}`);
+    if (showLogs)
+      console.error(`Error while getting backup files: ${err.message}`);
     // Re-throwing the error to be handled by the calling function
     throw new Error(`Failed to get backup files: ${err.message}`);
   }
@@ -732,9 +771,8 @@ async function getEnvBakFiles(directoryPath: string = outputFilePath): Promise<s
  * Handles errors gracefully and logs the operation steps if logging is enabled.
  */
 async function main() {
-
   // remove any existing .env file
-  await removeFile('.env');
+  await removeFile(".env");
   // ensure dotenv-linter is installed
   await ensureDotenvLinterInstalled();
 
