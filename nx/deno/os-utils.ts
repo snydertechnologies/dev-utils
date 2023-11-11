@@ -8,8 +8,11 @@
  * - Number of Logical CPUs available.
  * - Memory Information (Total, Free, and Available) if available.
  *
- * How to clear your cache for testing this script:
+ * **Usage Instructions:**
+ * To clear your cache for testing this script, run the following command:
+ * ```
  * deno cache --reload https://raw.githubusercontent.com/snydertechnologies/dev-utils/main/nx/deno/os-utils.ts
+ * ```
  *
  * @module os-utils
  *
@@ -24,9 +27,6 @@
  *
  * // Display the Number of Logical CPUs available:
  * deno run -A https://raw.githubusercontent.com/snydertechnologies/dev-utils/main/nx/deno/os-utils.ts cpus
- *
- * // Sample Usage for "cpus":
- * // This will return only the integer value for the number of logical CPUs available on the system.
  *
  * // Display Memory Information:
  * deno run -A https://raw.githubusercontent.com/snydertechnologies/dev-utils/main/nx/deno/os-utils.ts memory
@@ -43,10 +43,12 @@
  * // Display Memory Information (Free Memory) in "value-only" mode:
  * deno run -A https://raw.githubusercontent.com/snydertechnologies/dev-utils/main/nx/deno/os-utils.ts memory --index 1 --value
  *
- * // Display the script's usage instructions:
- * deno run -A https://raw.githubusercontent.com/snydertechnologies/dev-utils/main/nx/deno/os-utils.ts
+ * // Display file information:
+ * deno run -A https://raw.githubusercontent.com/snydertechnologies/dev-utils/main/nx/deno/os-utils.ts fileinfo /path/to/your/file.txt
+ *
+ * // Display file information with last modified timestamp in milliseconds:
+ * deno run -A https://raw.githubusercontent.com/snydertechnologies/dev-utils/main/nx/deno/os-utils.ts fileinfo /path/to/your/file.txt --last-modified-ms
  */
-
 import { EOL } from "https://deno.land/std/fs/eol.ts";
 
 const endOfLine = Deno.build.os === "windows" ? EOL.CRLF : EOL.LF;
@@ -91,13 +93,40 @@ function displayInfo(infoType: string, valueOnly: boolean, index?: number) {
   }
 }
 
+async function displayFileInfo(filePath: string, lastModifiedMs: boolean) {
+  try {
+    const fileInfo = await Deno.stat(filePath);
+    if (lastModifiedMs) {
+      const now = new Date().getTime();
+      const diffMs = now - fileInfo.mtime!.getTime();
+      console.log(diffMs);
+    } else {
+      console.log(`File Info for ${filePath}:`);
+      console.log(`Created: ${fileInfo.birthtime}`);
+      console.log(`Last Modified: ${fileInfo.mtime}`);
+      console.log(`Size: ${fileInfo.size} bytes`);
+    }
+  } catch (err) {
+    console.error(`Error reading file info for ${filePath}:`, err.message);
+  }
+}
+
 const args = Deno.args;
 if (args.length) {
   const infoType = args[0];
   const valueOnly = args.includes("-v") || args.includes("--value");
   const indexArg = args.includes("--index") ? args.indexOf("--index") + 1 : -1;
   const index = indexArg >= 0 ? parseInt(args[indexArg], 10) : undefined;
-  displayInfo(infoType, valueOnly, index);
+
+  if (infoType === "fileinfo") {
+    const filePath = args[1]; // assuming the file path is provided right after "fileinfo"
+    const lastModifiedMs = args.includes("--last-modified-ms");
+    displayFileInfo(filePath, lastModifiedMs);
+  } else {
+    displayInfo(infoType, valueOnly, index);
+  }
 } else {
-  console.log("Please provide an argument: eol, arch, cpus, or memory");
+  console.log(
+    "Please provide an argument: eol, arch, cpus, memory, or fileinfo",
+  );
 }
