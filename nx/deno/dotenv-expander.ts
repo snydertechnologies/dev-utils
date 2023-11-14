@@ -253,14 +253,19 @@ async function lintDotenv(): Promise<void> {
   log(`Running command: ....`);
   if (await isDotenvLinterBinaryInWorkspace()) {
     log(`Using local binary ${dotenvLinterWorkspaceBinary} to fix ${currentWorkingDirectory}/${outputFilePath}`);
+    log(`Running command: ${dotenvLinterWorkspaceBinary} fix ${outputFilePath} > /dev/null 2>&1`);
     success = await runCommandSafe(['sh', '-c', './bin/dotenv-linter fix ${outputFilePath} > /dev/null 2>&1']);
+    log(`This.`)
   } else {
     log(`Using global binary dotenv-linter to fix ${currentWorkingDirectory}/${outputFilePath}`);
+    log(`Running command: dotenv-linter fix ${outputFilePath} > /dev/null 2>&1`)
     success = await runCommandSafe([
       'sh',
       '-c',
-      'cd ${currentWorkingDirectory} && dotenv-linter fix ${outputFilePath} > /dev/null 2>&1',
+      'dotenv-linter fix ${outputFilePath} > /dev/null 2>&1',
     ]);
+    log(`That.`)
+
   }
 
   // Log the result of the linting process
